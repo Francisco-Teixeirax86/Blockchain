@@ -19,7 +19,8 @@ public class Blockchain {
     }
 
     private void createGenesisBlock() {
-        Block genesisBlock = new Block(0, System.currentTimeMillis(), new ArrayList<Transaction>() {{new Transaction("system", "creator-adress", 100);}}, "0", 0, "genesis-hash");
+        List<Transaction> genesisTransactions = new ArrayList<>();
+        Block genesisBlock = new Block(0, System.currentTimeMillis(), genesisTransactions, "0", 0, "");
 
         mineBlock(genesisBlock);
         blockchain.add(genesisBlock);
@@ -89,7 +90,7 @@ public class Blockchain {
 
     //Simple proof-of-work: find a hash starting with "00"
     private void mineBlock(Block block) {
-        while(block.getHash().startsWith("00")) {
+        while(!block.getHash().startsWith("00")) {
             block.setNonce(block.getNonce() + 1);
             block.setHash(block.calculateHash());
         }

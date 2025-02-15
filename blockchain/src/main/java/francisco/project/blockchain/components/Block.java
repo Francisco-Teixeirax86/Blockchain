@@ -1,9 +1,9 @@
 package francisco.project.blockchain.components;
 
+import francisco.project.blockchain.utils.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.autoconfigure.pulsar.PulsarProperties;
 
 import java.util.List;
 
@@ -13,11 +13,11 @@ import java.util.List;
 public class Block {
 
     private int index;
-    private String previousHash;
     private long timestamp;
-    private String hash;
-    private int nonce;
     private List<Transaction> transactions;
+    private String previousHash;
+    private int nonce;
+    private String hash;
 
     private String calculateHash() {
         String dataToHash = previousHash + timestamp + nonce + transactions.toString();

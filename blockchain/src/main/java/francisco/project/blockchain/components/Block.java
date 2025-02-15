@@ -19,7 +19,7 @@ public class Block {
     private int nonce;
     private String hash;
 
-    private String calculateHash() {
+    public String calculateHash() {
         String dataToHash = previousHash + timestamp + nonce + transactions.toString();
         return StringUtil.applySha256(dataToHash);
     }

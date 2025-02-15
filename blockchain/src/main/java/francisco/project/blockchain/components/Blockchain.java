@@ -1,5 +1,6 @@
 package francisco.project.blockchain.components;
 
+import francisco.project.blockchain.utils.Constants;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,8 @@ public class Blockchain {
 
     private void createGenesisBlock() {
         Block genesisBlock = new Block(0, System.currentTimeMillis(), new ArrayList<Transaction>() {{new Transaction("system", "creator-adress", 100);}}, "0", 0, "genesis-hash");
+
+        mineBlock(genesisBlock);
         blockchain.add(genesisBlock);
     }
 
@@ -60,5 +63,35 @@ public class Blockchain {
         if(isValidTransaction(transaction)) pendingTransactions.add(transaction);
         else throw new IllegalArgumentException("Transaction is not valid");
 
+    }
+
+    public void minePendingTransactions(String minerAddress) {
+        //Mining reward to transaction
+        Transaction transaction = new Transaction("system", minerAddress, Constants.miningReward);
+        addTransaction(transaction);
+
+        Block newBlock = new Block(
+                blockchain.size(),
+                System.currentTimeMillis(),
+                new ArrayList<>(pendingTransactions),
+                getLastBlock().getHash(),
+                0,
+                ""
+        );
+
+        //mine the block proof-of-work
+        mineBlock(newBlock);
+
+        blockchain.add(newBlock);
+        pendingTransactions.clear();
+    }
+
+
+    //Simple proof-of-work: find a hash starting with "00"
+    private void mineBlock(Block block) {
+        while(block.getHash().startsWith("00")) {
+            block.setNonce(block.getNonce() + 1);
+            block.setHash(block.calculateHash());
+        }
     }
 }

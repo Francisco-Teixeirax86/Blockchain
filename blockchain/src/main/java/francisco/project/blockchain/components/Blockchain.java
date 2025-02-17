@@ -22,7 +22,9 @@ public class Blockchain {
     private final RestTemplate restTemplate;
 
     public void addPeer(String peer){
-        peers.add(peer);
+        if(!peers.contains(peer)){
+            peers.add(peer);
+        }
     }
 
     public void removePeer(String peer){
@@ -141,7 +143,7 @@ public class Blockchain {
 
             //Check if the previous hash matches the hash of the previous block
             if(!previousBlock.getHash().equals(block.getPreviousHash())) return false;
-            
+
             //Check proof-of-work
             if(!block.getHash().startsWith("00")) return false;
         }

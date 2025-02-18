@@ -3,7 +3,6 @@ A simple yet functional blockchain demonstrating core concepts like proof-of-wor
 
 ![Java](https://img.shields.io/badge/Java-17-red)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.2-brightgreen)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Features  
 - **Blockchain Core**:  

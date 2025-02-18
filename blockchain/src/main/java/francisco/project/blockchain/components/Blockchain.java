@@ -121,7 +121,10 @@ public class Blockchain {
 
     //Simple proof-of-work: find a hash starting with "00"
     private void mineBlock(Block block) {
-        while(!block.getHash().startsWith("00")) {
+        int difficulty = 2;
+        if(blockchain.size() > difficulty) difficulty++;
+
+        while(!block.getHash().startsWith("0".repeat(difficulty))) {
             block.setNonce(block.getNonce() + 1);
             block.setHash(block.calculateHash());
         }

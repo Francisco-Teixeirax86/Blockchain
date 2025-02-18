@@ -44,15 +44,16 @@ In this project, the difficulty of the puzzle increases as the blockchain grows:
    ```bash  
    git clone https://github.com/Francisco-Teixeirax86/blockchain.git  
    cd blockchain
-##Run
+   
+## Run
 - mvn clean install  
 - mvn spring-boot:run
 
-##Running multiple nodes
-# Node 1 (Port 8080)  
+## Running multiple nodes
+Node 1 (Port 8080)  
 mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8080  
 
-# Node 2 (Port 8081)  
+Node 2 (Port 8081)  
 mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8081  
 
 Test using curl or postman

@@ -2,25 +2,54 @@ package francisco.project.blockchain.components;
 
 import francisco.project.blockchain.utils.Constants;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class Blockchain {
 
     @Getter
-    List<Block> blockchain = new ArrayList<>();
-    List<Transaction> pendingTransactions = new ArrayList<>();
+    private List<Block> blockchain = new ArrayList<>();
+    private List<Transaction> pendingTransactions = new ArrayList<>();
+    @Getter
+    private Set<String> peers = new HashSet<>();
+    private final RestTemplate restTemplate;
 
-    public Blockchain() {
+    public void addPeer(String peer){
+        if(!peers.contains(peer)){
+            peers.add(peer);
+        }
+    }
+
+    public void removePeer(String peer){
+        peers.remove(peer);
+    }
+
+    public void broadcastChain(){
+        for(String peer : peers){
+            try {
+                restTemplate.postForEntity(peer + "/api/chain", blockchain, String.class);
+            } catch (Exception e) {
+                System.out.println("Failed to broadcast to " + peer + " with error: " + e.getMessage());
+            }
+        }
+    }
+
+    @Autowired
+    public Blockchain(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
         createGenesisBlock();
     }
 
     private void createGenesisBlock() {
         List<Transaction> genesisTransactions = new ArrayList<>();
-        Block genesisBlock = new Block(0, System.currentTimeMillis(), genesisTransactions, "0", 0, "");
+        Block genesisBlock = new Block(0, System.currentTimeMillis(), genesisTransactions, "0", 0, "genesis-hash");
 
         mineBlock(genesisBlock);
         blockchain.add(genesisBlock);
@@ -85,14 +114,73 @@ public class Blockchain {
 
         blockchain.add(newBlock);
         pendingTransactions.clear();
+
+        broadcastChain();
     }
 
 
     //Simple proof-of-work: find a hash starting with "00"
     private void mineBlock(Block block) {
-        while(!block.getHash().startsWith("00")) {
+        int difficulty = 2;
+        if(blockchain.size() > difficulty) difficulty++;
+
+        while(!block.getHash().startsWith("0".repeat(difficulty))) {
             block.setNonce(block.getNonce() + 1);
             block.setHash(block.calculateHash());
         }
+    }
+
+
+    public boolean isChainValid(List<Block> chainToValidate) {
+        //Check if the chain starts with the genesis block
+        Block genesisBlock = chainToValidate.get(0);
+        if(!isGenesisBlockValid(genesisBlock)) return false;
+
+        for (int i = 1; i  < chainToValidate.size(); i++) {
+            Block block = chainToValidate.get(i);
+            Block previousBlock = chainToValidate.get(i - 1);
+
+            //Check if the stored hash is the calculated hash, in other words, checking
+            //if the block hasn't been manipulated
+            if(!block.getHash().equals(block.calculateHash())) return false;
+
+            //Check if the previous hash matches the hash of the previous block
+            if(!previousBlock.getHash().equals(block.getPreviousHash())) return false;
+
+            //Check proof-of-work
+            if(!block.getHash().startsWith("00")) return false;
+        }
+
+        return true;
+    }
+
+    //Check if the genesis block is valid
+    private boolean isGenesisBlockValid(Block genesisBlock) {
+        if (genesisBlock.getIndex() != 0 ||
+                !genesisBlock.getPreviousHash().equals("0") ||
+                !genesisBlock.getTransactions().isEmpty()) {
+            return false;
+        }
+
+        return genesisBlock.getHash().equals(genesisBlock.calculateHash());
+    }
+
+    public boolean replaceChain(List<Block> newChain) {
+        if(newChain.size() > blockchain.size() && isChainValid(newChain)) {
+            blockchain = new ArrayList<>(newChain);
+            removeConfirmedTransactions();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void removeConfirmedTransactions() {
+        Set<Transaction> confirmedTransactions = new HashSet<>();
+        for(Block block : blockchain) {
+            confirmedTransactions.addAll(block.getTransactions());
+        }
+
+        pendingTransactions.removeIf(confirmedTransactions::contains);
     }
 }
